@@ -15,6 +15,15 @@ int main(int argc, char** argv)
 	desc.add_options()
 		("help", "produce help message")
 
+        // params for LNS - ML setting
+        ("permutation", po::value<bool>()->default_value(1), "get permuataion or not")
+        ("select_best", po::value<bool>()->default_value(0), "select the best or not for each inner round; If false will only use the last imp>=0 item (not equal to the original LNS, need to set the inner rounds to 1 to run the original LNS)")
+        ("get_all_neighbours", po::value<bool>()->default_value(0), "calculate the full paths for the neighbours")
+        ("random_start_end", po::value<bool>()->default_value(0), "use manual input starts and ends")
+        ("lns_rounds", po::value<int>()->default_value(1), "rounds to run the LNS random init")
+        ("seed", po::value<int>()->default_value(1), "Random seed")
+
+
 		// params for the input instance and experiment settings
 		("map,m", po::value<string>()->required(), "input file for map")
 		("agents,a", po::value<string>()->required(), "input file for agents")
@@ -22,20 +31,20 @@ int main(int argc, char** argv)
         ("output,o", po::value<string>(), "output file name (no extension)")
         ("outputPaths", po::value<string>(), "output file for paths")
         ("cutoffTime,t", po::value<double>()->default_value(7200), "cutoff time (seconds)")
-		("screen,s", po::value<int>()->default_value(0),
+		("screen,s", po::value<int>()->default_value(1),
 		        "screen option (0: none; 1: LNS results; 2:LNS detailed results; 3: MAPF detailed results)")
 		("stats", po::value<string>(), "output stats file")
 
 		// solver
 		("solver", po::value<string>()->default_value("LNS"), "solver (LNS, A-BCBS, A-EECBS)")
 		("sipp", po::value<bool>()->default_value(true), "Use SIPP as the single-agent solver")
-		("seed", po::value<int>()->default_value(0), "Random seed")
 
         // params for LNS
+        ("uniform_neighbor", po::value<bool>()->default_value(0), "uniformly genreate the neighbor_size or not")
         ("initLNS", po::value<bool>()->default_value(true),
              "use LNS to find initial solutions if the initial sovler fails")
         ("neighborSize", po::value<int>()->default_value(8), "Size of the neighborhood")
-        ("maxIterations", po::value<int>()->default_value(0), "maximum number of iterations")
+        ("maxIterations", po::value<int>()->default_value(1000000), "maximum number of iterations")
         ("initAlgo", po::value<string>()->default_value("PP"),
                 "MAPF algorithm for finding the initial solution (EECBS, PP, PPS, CBS, PIBT, winPIBT)")
         ("replanAlgo", po::value<string>()->default_value("PP"),
@@ -72,6 +81,7 @@ int main(int argc, char** argv)
     double time_limit = vm["cutoffTime"].as<double>();
     int screen = vm["screen"].as<int>();
 	srand(vm["seed"].as<int>());
+    cout << "num_of_cols " <<instance.num_of_cols << " num_of_rows " << instance.num_of_rows << endl;
 
 	if (vm["solver"].as<string>() == "LNS")
     {
@@ -85,6 +95,11 @@ int main(int argc, char** argv)
                 vm["initDestoryStrategy"].as<string>(),
                 vm["sipp"].as<bool>(),
                 screen, pipp_option);
+        lns.lns_rounds  = vm["lns_rounds"].as<int>();
+        lns.get_all_neighbours = vm["get_all_neighbours"].as<bool>();
+        lns.permutation = vm["permutation"].as<bool>();
+        lns.uniform_neighbor = vm["uniform_neighbor"].as<bool>();
+        lns.select_best = vm["select_best"].as<bool>();
         bool succ = lns.run();
         if (succ)
         {

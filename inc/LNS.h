@@ -28,6 +28,12 @@ public:
     int sum_of_distances = -1;
     int restart_times = 0;
 
+    bool permutation;
+    bool select_best;
+    bool get_all_neighbours;
+    int lns_rounds = 1;
+    bool uniform_neighbor;
+
     LNS(const Instance& instance, double time_limit,
         const string & init_algo_name, const string & replan_algo_name, const string & destory_name,
         int neighbor_size, int num_of_iterations, bool init_lns, const string & init_destory_name, bool use_sipp,
@@ -44,6 +50,8 @@ public:
     void writePathsToFile(const string & file_name) const;
     string getSolverName() const override { return "LNS(" + init_algo_name + ";" + replan_algo_name + ")"; }
 private:
+    vector<int> shuffled_agents;
+
     InitLNS* init_lns = nullptr;
     string init_algo_name;
     string replan_algo_name;

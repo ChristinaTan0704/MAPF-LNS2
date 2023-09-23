@@ -7,8 +7,8 @@
 int RANDOM_WALK_STEPS = 100000;
 
 Instance::Instance(const string& map_fname, const string& agent_fname, 
-	int num_of_agents, int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
-	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents)
+	int num_of_agents, bool random_start_end, int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
+	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents), random_start_end(random_start_end)
 {
 	bool succ = loadMap();
 	if (!succ)
@@ -365,32 +365,67 @@ bool Instance::loadAgents()
 		}
 		start_locations.resize(num_of_agents);
 		goal_locations.resize(num_of_agents);
-		char_separator<char> sep("\t");
-		for (int i = 0; i < num_of_agents; i++)
-		{
-			getline(myfile, line);
-			if (line.empty())
+		
+		if (not random_start_end){
+            start_locations.resize(num_of_agents);
+            goal_locations.resize(num_of_agents);
+            char_separator<char> sep("\t");
+            for (int i = 0; i < num_of_agents; i++)
             {
-			    cerr << "Error! The instance has only " << i << " agents" << endl;
-			    exit(-1);
+                getline(myfile, line);
+                if (line.empty())
+                {
+                    cerr << "Error! The instance has only " << i << " agents" << endl;
+                    exit(-1);
+                }
+                tokenizer< char_separator<char> > tok(line, sep);
+                tokenizer< char_separator<char> >::iterator beg = tok.begin();
+                beg++; // skip the first number
+                beg++; // skip the map name
+                beg++; // skip the columns
+                beg++; // skip the rows
+                // read start [row,col] for agent i
+                int col = atoi((*beg).c_str());
+                beg++;
+                int row = atoi((*beg).c_str());
+                start_locations[i] = linearizeCoordinate(row, col);
+                // read goal [row,col] for agent i
+                beg++;
+                col = atoi((*beg).c_str());
+                beg++;
+                row = atoi((*beg).c_str());
+                goal_locations[i] = linearizeCoordinate(row, col);
             }
-			tokenizer< char_separator<char> > tok(line, sep);
-			tokenizer< char_separator<char> >::iterator beg = tok.begin();
-			beg++; // skip the first number
-			beg++; // skip the map name
-			beg++; // skip the columns
-			beg++; // skip the rows
-				   // read start [row,col] for agent i
-			int col = atoi((*beg).c_str());
-			beg++;
-			int row = atoi((*beg).c_str());
-			start_locations[i] = linearizeCoordinate(row, col);
-			// read goal [row,col] for agent i
-			beg++;
-			col = atoi((*beg).c_str());
-			beg++;
-			row = atoi((*beg).c_str());
-			goal_locations[i] = linearizeCoordinate(row, col);
+        }
+        else
+		{
+			char_separator<char> sep("\t");
+			for (int i = 0; i < num_of_agents; i++)
+			{
+				getline(myfile, line);
+				if (line.empty())
+				{
+					cerr << "Error! The instance has only " << i << " agents" << endl;
+					exit(-1);
+				}
+				tokenizer< char_separator<char> > tok(line, sep);
+				tokenizer< char_separator<char> >::iterator beg = tok.begin();
+				beg++; // skip the first number
+				beg++; // skip the map name
+				beg++; // skip the columns
+				beg++; // skip the rows
+					// read start [row,col] for agent i
+				int col = atoi((*beg).c_str());
+				beg++;
+				int row = atoi((*beg).c_str());
+				start_locations[i] = linearizeCoordinate(row, col);
+				// read goal [row,col] for agent i
+				beg++;
+				col = atoi((*beg).c_str());
+				beg++;
+				row = atoi((*beg).c_str());
+				goal_locations[i] = linearizeCoordinate(row, col);
+			}
 		}
 	}
 	else // My benchmark
